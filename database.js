@@ -1,3 +1,4 @@
+import { EmbedBuilder } from 'discord.js';
 import dotenv from 'dotenv';
 import mysql from 'mysql';
 
@@ -149,12 +150,23 @@ export function PrintLeaderboard (message, con) {
         if (error) {
             console.error('Error executing query: ', error);
         } else {
-            let leaderboardString = 'Leaderboard:\n';
+            let leaderboardString = '';
             results.forEach((row, index) => {
-                leaderboardString += `${index + 1}. ${row.discord_tag}: ${row.score}\n`;
+                leaderboardString += `${index + 1}\t\t${row.discord_tag}\t\t${row.score}\n`;
             });
             
-            message.reply(leaderboardString);
+            var LeaderboardMessage = new EmbedBuilder()
+                .setColor(0xFFA500)
+                .setTitle('Fish Game Leaderboard')
+                .setDescription(`**ANNOUNCEMENTS**\nBeta testing will end May **20th** and the Board will reset after balance patches.\u000A`)
+                .addFields(
+                    { name: '------------------------' , value: '\u200B'},
+                    { name: 'Position' , value: '\u200B', inline: true},
+                    { name: 'Player' , value: '\u200B', inline: true},
+                    { name: 'Score' , value: '\u200B', inline: true},
+                )
+                .setFooter({ text: leaderboardString })
+            message.reply ({ embeds: [LeaderboardMessage] });
         }
     });
 };

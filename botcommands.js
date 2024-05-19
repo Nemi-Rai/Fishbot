@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import * as database from './database.js';
 
 const fishTypes = [
@@ -15,12 +15,19 @@ const fishTypes = [
 
 // Bot help command, replies to player with help message.
 export function HelpCommand(message){
-    var general = "Welcome to the fishgame! Catch fish to get points. Game commands:";
-    var help = "/help: Display this help message.";
-    var fish = "/fish: Cast a bait to catch a fish.";
-    var box = "/box: Display your bait count and score.";
-    var board = "/board: Show the leaderboard.";
-    message.reply(`${general}\n${help}\n${fish}\n${box}\n${board}\n`);
+    var helpMessage = new EmbedBuilder()
+        .setColor(0x00FF00)
+        .setTitle('Fish Game Help and Commands')
+        .setDescription('Welcome to the fishgame! Catch fish with /fish to get points and coin. 3 bait is added to each user every hour. Check the store for wares.')
+        .addFields(
+            { name: '------------------------' , value: '**GAME COMMANDS:**'},
+            { name: '/fish', value: 'Cast a bait to catch a fish.' },
+            { name: '/box', value: 'Display your bait count and score.'},
+            { name: '/board', value: 'Show the leaderboard.'} ,
+            { name: '/shop', value: 'View the shop.' },
+            { name: '/help', value: 'Show this help message.', },
+        );
+    message.reply ({ embeds: [helpMessage] });
 };
 
 // Bot Fish command, casts for the player, removes a bait, updates score, and replies with fish caught.
@@ -55,16 +62,23 @@ export function FishCommand(message, con){
                     }
                 });
                 // aysnc issues minus 1 from result for a quick fix.
-                var msg = message.member.user.tag + " caught a **" + caughtfish.name + "** weighing " + weight + "KG worth " + score + " points and earned " + coin + "¢! " + (result - 1) + " casts remaining.";
-                var imgpath = "./img/" + caughtfish.name.toLowerCase() + ".jpeg"; 
-                message.reply({
-                    content: msg,
-                    files: [{
-                        attachment: imgpath
-                    }]
-                });
+                
+                const attachment = new AttachmentBuilder(`./img/${caughtfish.name.toLowerCase()}.jpeg`);
+                var FishMessage = new EmbedBuilder()
+                    .setColor(0x0099FF)
+                    .addFields(
+                        { name: `${message.member.user.tag} caught a ${caughtfish.name}!` , value: `${result-1} casts remaining.`},
+                        { name: 'Weight' , value: `${weight}KG`, inline: true},
+                        { name: 'Score' , value: `${score}`, inline: true},
+                        { name: 'Coin' , value: `${coin}¢`, inline: true},
+                    )
+                    .setImage(`attachment://${caughtfish.name.toLowerCase()}`);
+                message.reply ({ files: [attachment], embeds: [FishMessage] });
             } else {
-                message.reply(message.member.user.tag + " does not have any bait!");
+                var FishMessage = new EmbedBuilder()
+                    .setColor(0xFF0000)
+                    .setTitle(`${message.member.user.tag} does not have any bait! Buy more in the store, or wait until hourly restock.`);
+                message.reply ({ embeds: [FishMessage] });
             };
         }
     });
@@ -130,12 +144,12 @@ export function ShopCommand(message, con){
     row1.components[1].setDisabled(true);
     row2.components[0].setDisabled(true);
     row2.components[1].setDisabled(true);
-    const messageObject = {
-        // Take a gander at our wares, click on an item you would like
-        content: `Welcome to the Shop ${message.member.user}! We are currently under construction.`,
-        components: [row1, row2]
-    };
-    message.reply(messageObject);
+
+    var ShopMessage = new EmbedBuilder()
+        .setColor(0x800080)
+        .setTitle('Bait & Catch Fishing Shop')
+        .setDescription(`Welcome to the Shop ${message.member.user}! Take a gander at our wares, click on an item you would like to buy.`)
+    message.reply ({ embeds: [ShopMessage], components: [row1, row2] });
 };
 
 export async function BuyBait (interaction, con, id) {

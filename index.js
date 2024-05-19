@@ -32,11 +32,12 @@ client.on('messageCreate', async (message) => {
     try {
         const userExists = await database.CheckIfUserInDatabase(message, con);
         if (!userExists) {
-             database.AddUser(message, con); // Assuming AddUser is also async
-             database.UpdateBaitOne(3, message.member.user.id, con); // Assuming UpdateBaitOne is also async
+             database.AddUser(message, con); 
+             database.UpdateBaitOne(3, message.member.user.id, con); 
         }
     } catch (error) {
         console.log('Error handling user check:', error);
+        return;
     }
     
     // Bot commands. See botcommands.js for logic
