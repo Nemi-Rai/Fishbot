@@ -99,7 +99,7 @@ export function CheckBait(id, con) {
         con.query(query, [id], (error, result) => {
             if (error) {
                 reject(error);
-            } else if (result[0].bait == 10) {
+            } else if (result[0].bait == 15) {
                 resolve(false);
             } else {
                 resolve(true);
@@ -107,6 +107,7 @@ export function CheckBait(id, con) {
         });
     });
 }
+
 
 export function CheckPlayerBait (message, con, callback) {
     var values = message.member.user.id;
@@ -124,9 +125,39 @@ export function CheckPlayerBait (message, con, callback) {
     });
 };
 
+export function CheckPlayerLure(id, con) {
+    return new Promise((resolve, reject) => {
+        var query = `SELECT bait from ${playertable} WHERE discord_id = ?`;
+        con.query(query, [id], (error, result) => {
+            if (error) {
+                reject(error);
+            } else if (result[0].lure == 5) {
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+}
+
+export function CheckLure(id, con) {
+    return new Promise((resolve, reject) => {
+        var query = `SELECT lure from ${playertable} WHERE discord_id = ?`;
+        con.query(query, [id], (error, result) => {
+            if (error) {
+                reject(error);
+            } else if (result[0].lure > 0) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+    });
+}
+
 export function UpdateBaitAll (amount, con) {
     var values = amount;
-    var query = `UPDATE ${playertable} SET bait = LEAST(bait + ?, 10)`;
+    var query = `UPDATE ${playertable} SET bait = LEAST(bait + ?, 15)`;
     con.query(query, values, (error, result) => {
         if (error) {
             console.log('Error executing query: ', error);
@@ -136,7 +167,18 @@ export function UpdateBaitAll (amount, con) {
 
 export async function UpdateBaitOne (amount, id, con) {
     var values = [amount, id];
-    var query = `UPDATE ${playertable} SET bait = LEAST(bait + ?, 10) WHERE discord_id = ?`;
+    var query = `UPDATE ${playertable} SET bait = LEAST(bait + ?, 15) WHERE discord_id = ?`;
+    con.query(query, values, (error, result) => {
+        if (error) {
+            console.log('Error executing query: ', error);
+        }
+    });
+};
+
+
+export async function UpdateLureOne (amount, id, con) {
+    var values = [amount, id];
+    var query = `UPDATE ${playertable} SET lure = LEAST(lure + ?, 5) WHERE discord_id = ?`;
     con.query(query, values, (error, result) => {
         if (error) {
             console.log('Error executing query: ', error);
@@ -152,14 +194,14 @@ export function PrintLeaderboard (message, con) {
         } else {
             let leaderboardString = '';
             results.forEach((row, index) => {
-                leaderboardString += `${index + 1}\t\t${row.discord_tag}\t\t${row.score}\n`;
+                leaderboardString += `${index + 1}\t\t${row.score}\t\t${row.discord_tag}\n`;
             });
             
             var LeaderboardMessage = new EmbedBuilder()
                 .setColor(0xFFA500)
                 .setTitle('Fish Game Leaderboard')
-                .setDescription(`**ANNOUNCEMENTS**\nBeta testing will end May **20th** and the Board will reset after balance patches.\u000A`)
-                .addFields(
+                .setDescription(`**CHANGES**\n• Leaderboard reset.\n• Increased chance to not catch a fish.\n• Aesthetic changes\n• Increased store prices.\n• New store item.\n• Increased cap on bait from 10 to 15.\u000A`)
+                .addFields( 
                     { name: '------------------------' , value: '\u200B'},
                     { name: 'Position' , value: '\u200B', inline: true},
                     { name: 'Player' , value: '\u200B', inline: true},
@@ -178,8 +220,16 @@ export function PrintTackleBox(message, con) {
         if (error) {
             callback(error, false);
         } else {
-            var res = `Player: ${message.member.user.tag}\nBait: ${result[0].bait}\nCoin: ${result[0].coin}`;
-            message.reply(res);
+            var BoxMessage = new EmbedBuilder()
+                .setColor(0x3B270C)
+                .setTitle(`${message.member.user}'s tackle box`)
+                .addFields(
+                    { name: 'Score' , value: `${result[0].score}`, inline: true},
+                    { name: 'Coin' , value: `${result[0].coin}`, inline: true},
+                    { name: 'Bait' , value: `${result[0].bait}/15`, inline: true},
+                    { name: 'Lure' , value: `${result[0].lure}/5`, inline: true},
+                );
+            message.reply ({ embeds: [BoxMessage] });
         }
     });
 };

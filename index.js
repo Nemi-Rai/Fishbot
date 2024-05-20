@@ -26,7 +26,7 @@ client.on('ready', (c) => {
 // Bot message commands
 client.on('messageCreate', async (message) => {
     // Exit on self message.
-    if (message.author.bot) return;
+    if (message.author.bot || message.channel.id == '1042890374626168923') return;
 
     // Check if user is in the database, add user to the database if not
     try {
@@ -39,11 +39,18 @@ client.on('messageCreate', async (message) => {
         console.log('Error handling user check:', error);
         return;
     }
-    
+    var lure = 0;
     // Bot commands. See botcommands.js for logic
     switch (message.content) {
+        case "/fish -lure":
+            lure = 1;
+            var commandList = [lure];
+            bot.FishCommand(message, con, commandList);
+            break;
         case "/fish":
-            bot.FishCommand(message, con);
+            lure = 0;
+            var commandList = [lure];
+            bot.FishCommand(message, con, commandList);
             break;
         case "/shop":
             bot.ShopCommand(message, con, client);
@@ -81,7 +88,7 @@ client.on("interactionCreate", async (interaction) => {
             bot.BuyBait(interaction, con, interaction.member.user.id);
             break;
         case "buy-lure":
-            interaction.reply(`${interaction.user} bought 1 lure`);
+            bot.BuyLure(interaction, con, interaction.member.user.id);
             break;
         case "buy-net":
             interaction.reply(`${interaction.user} bought 1 net`);
